@@ -1,14 +1,15 @@
 import React, { Component } from 'react'
 import { useEffect } from 'react'
-import {  ArcRotateCamera, Engine, HemisphericLight, MeshBuilder, Scene, Vector3  } from 'babylonjs'
+import {  ArcRotateCamera, Engine, HemisphericLight, MeshBuilder, Scene, Vector3 ,Sound } from 'babylonjs'
 import * as earcut from 'earcut'
+// import musicip from '../../public/music/迷失幻境.mp3'
 window.earcut = earcut
 
 export default class BasicScene extends Component {
     constructor(props){
         super(props);
-        this.engine = new Engine(this.props)
-        this.scene = this.CreateScene()
+        this.engine = new Engine(this.props) //引擎
+        this.scene = this.CreateScene() //创建场景
 
         this.scene.debugLayer.show({
             embedMode: true
@@ -42,6 +43,13 @@ export default class BasicScene extends Component {
         outline.push(new Vector3(-0.3, 0, 0.1));
 
         const car = new MeshBuilder.ExtrudePolygon("car", {shape: outline, depth: 0.2});
+
+        var music = new Sound("mishi",require('./music/mishi.mp3'), this.scene, null, {
+            loop: true,
+            autoplay: true,
+        });
+
+        music.play();
 
         return scene;
     }
