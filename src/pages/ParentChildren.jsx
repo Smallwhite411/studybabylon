@@ -44,7 +44,7 @@ export default class ParentChildren extends Component {
         boxChild.position.y = 2;
         boxChild.position.z = 0;
     
-        boxChild.rotation.x = Math.PI / 4;
+        boxChild.rotation.x = Math.PI / 4; //180/4=45deg
         boxChild.rotation.y = Math.PI / 4;
         boxChild.rotation.z = Math.PI / 4;
     
