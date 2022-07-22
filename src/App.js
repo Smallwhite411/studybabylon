@@ -5,6 +5,7 @@ import SmallVillage from "./pages/SmallVillage";
 import movePOV from "./pages/MovePov";
 import CartoonCharacters from "./pages/CartoonCharacters";
 import DistantHills from "./pages/DistantHills/DistantHills";
+import Latheturned from "./pages/LatheTurned/LatheTurned";
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
   // new movePOV(canvas)
   // new CartoonCharacters(canvas)
   // new DistantHills(canvas)
+  // new Latheturned(canvas)
   
   return (
     <div className="App">
