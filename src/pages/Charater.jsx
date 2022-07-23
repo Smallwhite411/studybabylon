@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import {
-  ArcRotateCamera, Engine, HemisphericLight, MeshBuilder, Scene, Vector3, Sound, ParticleSystem, SpotLight,DirectionalLight,
+  ArcRotateCamera, Engine, HemisphericLight, MeshBuilder, Scene, Vector3, Sound, ParticleSystem, SpotLight,DirectionalLight,FollowCamera,
   Color3, StandardMaterial, Texture, Vector4, Mesh, Animation, SceneLoader, Axis, Tools, Space, CubeTexture, SpriteManager, Sprite, Color4, PointerEventTypes, ShadowGenerator
 } from 'babylonjs'
 import * as earcut from 'earcut'
@@ -10,7 +10,7 @@ import * as GUI from 'babylonjs-gui'
 // import musicip from '../pages/picture/music/迷失幻境.mp3'
 window.earcut = earcut
 
-export default class SmallVillage extends Component {
+export default class Charater extends Component {
   constructor(props) {
     super(props);
     this.engine = new Engine(this.props) //引擎，这个props 其实也就是从App.js 里面传过来的canvas
@@ -27,10 +27,18 @@ export default class SmallVillage extends Component {
 
   CreateScene = () => {
     const scene = new Scene(this.engine); //场景需要引擎
-    const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 150, new Vector3(0, 60, 0)); //这里可以调整摄像机的位置和距离物体的距离
-                                      //默认相机应该是在x轴那边 ,
-                                      //名称   在横轴的旋转(向右旋转 90度为正方形)  在纵轴的旋转  摄像机到目标的距离  定义相机的目标，这就是一个点
-    camera.upperBetaLimit = Math.PI / 2.2; //限制摄像机的旋转角度
+    const camera = new FollowCamera("FollowCam", new Vector3(-6, 0, 0), scene);  //给个方位
+    camera.radius = 1; //半径
+	
+	camera.heightOffset = 8; //摄像头的高度
+	
+	camera.rotationOffset = 0; //旋转，不旋转，就在身后
+
+	camera.cameraAcceleration = 0.005 //加速度
+
+	camera.maxCameraSpeed = 10 //最大速度
+
+    // camera.upperBetaLimit = Math.PI / 2.2; //限制摄像机的旋转角度
 
 
     camera.attachControl(this.props, true);//attachControl  这个是可以让我们控制鼠标。可以操作
@@ -334,7 +342,8 @@ export default class SmallVillage extends Component {
 
       shadowGenerator.addShadowCaster(dude)
 
-      camera.parent = dude //人物dude作为摄像机的父级
+    //   camera.parent = dude //人物dude作为摄像机的父级
+    camera.lockedTarget = dude;
 
       scene.beginAnimation(result.skeletons[0], 0, 100, true, 1.0);
 
