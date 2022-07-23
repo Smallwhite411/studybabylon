@@ -1,11 +1,12 @@
 import React, { Component } from 'react'
 import {
-  ArcRotateCamera, Engine, HemisphericLight, MeshBuilder, Scene, Vector3, Sound,ParticleSystem,
-  Color3, StandardMaterial, Texture, Vector4, Mesh, Animation, SceneLoader, Axis, Tools, Space, CubeTexture, SpriteManager,Sprite,Color4,PointerEventTypes
+  ArcRotateCamera, Engine, HemisphericLight, MeshBuilder, Scene, Vector3, Sound, ParticleSystem, SpotLight,DirectionalLight,
+  Color3, StandardMaterial, Texture, Vector4, Mesh, Animation, SceneLoader, Axis, Tools, Space, CubeTexture, SpriteManager, Sprite, Color4, PointerEventTypes, ShadowGenerator
 } from 'babylonjs'
 import * as earcut from 'earcut'
 // import * as from 'babylonjs';
 import 'babylonjs-loaders';
+import * as GUI from 'babylonjs-gui'
 // import musicip from '../pages/picture/music/迷失幻境.mp3'
 window.earcut = earcut
 
@@ -32,7 +33,95 @@ export default class SmallVillage extends Component {
 
     camera.attachControl(this.props, true);//attachControl  这个是可以让我们控制鼠标。可以操作
 
-    const light = new HemisphericLight("light", new Vector3(4, 1, 0), this.scene); //摄像机的位置
+    // const light = new HemisphericLight("light", new Vector3(4, 1, 0), this.scene); //摄像机的位置
+    const  light = new DirectionalLight("dir01", new Vector3(1, -1, 1), scene); //这个是旋转方向
+    light.position = new Vector3(0, 15, -30); //这个是高度
+    light.intensity = 1 //降低环境光灯高度，这样聚光灯照射的才看得出来，要不都是白色的
+
+    const shadowGenerator = new ShadowGenerator(1024,light); //影子发生器，1024应该是在某一范围内才能有影子
+
+
+
+    //GUI
+    const adt = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    const panel = new GUI.StackPanel();
+    panel.width = "220px";
+    panel.top = "-25px";
+    //设置对其方式
+    panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;//右对齐
+    panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM; //下对齐 综合也就是右下角对齐
+    adt.addControl(panel);
+
+    const header = new GUI.TextBlock(); //是一个控件，用于创建文本块控件的
+    header.text = "Night to Day";
+    header.height = "30px";
+    header.color = "white"; //其实这个可有可无，只是起到一个显示的作用
+    panel.addControl(header); 
+
+    const slider = new GUI.Slider(); //用于创建滑块控件的类
+    slider.minimum = 0; //限制从0到1
+    slider.maximum = 1;
+    slider.borderColor = "black";
+    slider.color = "gray";
+    slider.background = "white";
+    slider.value = 1; //初始值，最好和上面的相对应  light.intensity = 1 
+    slider.height = "20px";
+    slider.width = "200px";
+    slider.onValueChangedObservable.add((value) => { //事件，当滑动的时候动态改变
+        if (light) {
+            light.intensity = value;
+        }
+    });
+    panel.addControl(slider);
+
+    //聚光灯
+    const lampLight = new SpotLight("lampLight", Vector3.Zero(), new Vector3(0, -1, 0), Math.PI, 1, scene);
+                                    //名称  摆放位置  照射方向  扩散角度（现在这个是一个半圆，所谓的半圆是灯光两点到灯之间的夹角）  发散速度
+    lampLight.diffuse = Color3.Yellow(); //聚光灯光源，由一点发散开来，上色为黄色
+
+    //为了创建灯柱，我们介绍了另一种通过沿路径挤出形状来创建网格的方法。
+    const lampShape = []; 
+    for (let i = 0; i < 20; i++) {//分成20份，最大角度是360度
+      lampShape.push(new Vector3(Math.cos(i * Math.PI / 10), Math.sin(i * Math.PI / 10), 0));
+    }
+    lampShape.push(lampShape[0]); //关闭
+
+    //柱子的路线
+    const lampPath = [];
+    lampPath.push(new Vector3(0, 0, 0));
+    lampPath.push(new Vector3(0, 10, 0));
+    for (let i = 0; i < 20; i++) {
+      lampPath.push(new Vector3(1 + Math.cos(Math.PI - i * Math.PI / 40), 10 + Math.sin(Math.PI - i * Math.PI / 40), 0));
+    }
+    lampPath.push(new Vector3(3, 11, 0));
+
+    const yellowMat = new StandardMaterial("yellowMat");
+    yellowMat.emissiveColor = Color3.Yellow(); //灯泡的颜色
+
+    //柱子
+    const lamp = MeshBuilder.ExtrudeShape("lamp", { cap: Mesh.CAP_END, shape: lampShape, path: lampPath, scale: 0.5 });
+
+    //添加一个电灯泡
+    const bulb = MeshBuilder.CreateSphere("bulb", { diameterX: 1.5, diameterZ: 0.8 });
+
+    bulb.material = yellowMat;
+    bulb.parent = lamp;
+    bulb.position.x = 2;
+    bulb.position.y = 10.5;
+    lamp.position.z = 4.20;
+    lamp.position.x = 0.46;
+    lamp.rotation.y = Math.PI/6.4
+    lamp.scaling = new Vector3(0.5 , 0.5 , 0.5)
+
+    lampLight.parent = bulb;
+
+    const lamp1 = lamp.clone("lamp1");
+    lamp1.position.z = -6.33;
+    lamp1.position.x = 1.45;
+    lamp1.scaling = new Vector3(0.1 , 0.1  ,0.1)
+    lamp1.rotation.y = Math.PI / 36;
+
 
     //天空盒子
     const skybox = MeshBuilder.CreateBox("skybox", { size: 150 });//天空盒子
@@ -49,7 +138,7 @@ export default class SmallVillage extends Component {
 
     //ufo
     this.spriteManagerUFO(scene);
-    
+
     //喷泉
     this.fountain(scene)
 
@@ -59,6 +148,7 @@ export default class SmallVillage extends Component {
 
     const ground = MeshBuilder.CreateGround("ground", { width: 24, height: 24 });
     ground.material = groundMat;
+    ground.receiveShadows = true;
 
     const largeGround = MeshBuilder.CreateGroundFromHeightMap("largeGround", "https://assets.babylonjs.com/environments/villageheightmap.png", { width: 150, height: 150, subdivisions: 40, minHeight: 0, maxHeight: 10 });
 
@@ -72,9 +162,10 @@ export default class SmallVillage extends Component {
 
     this.buildDwellings()
 
-    this.buildCar(scene) //传进去一个场景
+    this.buildCar(scene,shadowGenerator) //传进去一个场景
 
-    this.CartoonSceneLoader(scene)
+    this.CartoonSceneLoader(scene,shadowGenerator)
+
 
     var music = new Sound("mishi", require('./music/mishi.mp3'), this.scene, null, {
       loop: true,
@@ -86,7 +177,7 @@ export default class SmallVillage extends Component {
     return scene;
   }
 
-  buildCar = (scene) => {
+  buildCar = (scene,shadowGenerator) => {
     console.log(scene)
     const outline = [ //先定好起始位置
       new Vector3(-0.3, 0, -0.1),
@@ -121,6 +212,8 @@ export default class SmallVillage extends Component {
     car.position.z = 1.26;
     car.position.x = 3.37;
     car.scaling = new Vector3(3, 3, 3)
+
+    shadowGenerator.addShadowCaster(car , true) //挂在影子生成器上
 
     //创建车轮的材质
     const wheelRBMat = new StandardMaterial("wheelRB");//声明一个材质的名称
@@ -209,7 +302,7 @@ export default class SmallVillage extends Component {
 
   }
 
-  CartoonSceneLoader = (scene) => {
+  CartoonSceneLoader = (scene,shadowGenerator) => {
     // Dude
 
     SceneLoader.ImportMeshAsync("him", "https://playground.babylonjs.com/scenes/Dude/", "Dude.babylon", scene).then((result) => { //网络请求，异步操作 
@@ -236,6 +329,8 @@ export default class SmallVillage extends Component {
       dude.position = new Vector3(-6, 0, 0);
       dude.rotate(Axis.Y, Tools.ToRadians(-95), Space.LOCAL);
       const startRotation = dude.rotationQuaternion.clone();
+
+      shadowGenerator.addShadowCaster(dude)
 
       scene.beginAnimation(result.skeletons[0], 0, 100, true, 1.0);
 
@@ -380,66 +475,66 @@ export default class SmallVillage extends Component {
   spriteManagerTrees = (scene) => {
     const spriteManagerTrees = new SpriteManager("spriteManagerTrees", "https://playground.babylonjs.com/textures/palm.png", 2000, { width: 512, height: 1024 }, scene)
     //名称，2d图片地址，最大数量
-    for( let i = 0; i < 500; i++){
-        const tree = new Sprite("tree"+i, spriteManagerTrees);
-        tree.position = new Vector3(
-          Math.random() * -30,
-          0.5,
-          Math.random() * 20 + 8
-        )
-    }
-    for( let i = 0; i < 500; i++){
-      const tree = new Sprite("tree"+i, spriteManagerTrees);
+    for (let i = 0; i < 500; i++) {
+      const tree = new Sprite("tree" + i, spriteManagerTrees);
       tree.position = new Vector3(
-        Math.random() * 25+7,
+        Math.random() * -30,
+        0.5,
+        Math.random() * 20 + 8
+      )
+    }
+    for (let i = 0; i < 500; i++) {
+      const tree = new Sprite("tree" + i, spriteManagerTrees);
+      tree.position = new Vector3(
+        Math.random() * 25 + 7,
         0.5,
         Math.random() * -30 + 8
       )
-  }
-  }
-
-  spriteManagerUFO = (scene)=>{
-      const spriteManagerUFO = new SpriteManager("ufo","https://assets.babylonjs.com/environments/ufo.png",1,{width: 128, height: 76},scene);
-      const ufo = new Sprite("ufo", spriteManagerUFO);
-      ufo.playAnimation(0 , 16 , true , 125 ); //从0 到 16 帧 循环播放 延迟125ms 播放
-      ufo.position = new Vector3(0 , 5 , 0); 
-      ufo.width = 2;
-      ufo.height = 1; 
-
+    }
   }
 
-  fountain = (scene)=>{
-      const fountainProfile = [
-        new Vector3(0, 0, 0),
-        new Vector3(10, 0, 0),
-        new Vector3(10, 4, 0),
-        new Vector3(8, 4, 0),
-        new Vector3(8, 1, 0),
-        new Vector3(1, 2, 0),
-        new Vector3(1, 15, 0),
-        new Vector3(3, 17, 0)
+  spriteManagerUFO = (scene) => {
+    const spriteManagerUFO = new SpriteManager("ufo", "https://assets.babylonjs.com/environments/ufo.png", 1, { width: 128, height: 76 }, scene);
+    const ufo = new Sprite("ufo", spriteManagerUFO);
+    ufo.playAnimation(0, 16, true, 125); //从0 到 16 帧 循环播放 延迟125ms 播放
+    ufo.position = new Vector3(0, 5, 0);
+    ufo.width = 2;
+    ufo.height = 1;
+
+  }
+
+  fountain = (scene) => {
+    const fountainProfile = [
+      new Vector3(0, 0, 0),
+      new Vector3(10, 0, 0),
+      new Vector3(10, 4, 0),
+      new Vector3(8, 4, 0),
+      new Vector3(8, 1, 0),
+      new Vector3(1, 2, 0),
+      new Vector3(1, 15, 0),
+      new Vector3(3, 17, 0)
     ];
 
-    const fountain = MeshBuilder.CreateLathe("fountain",{
-        shape: fountainProfile,
-        sideOrientation: Mesh.DOUBLESIDE 
+    const fountain = MeshBuilder.CreateLathe("fountain", {
+      shape: fountainProfile,
+      sideOrientation: Mesh.DOUBLESIDE
     })
 
     fountain.position.y = 0.02;
     fountain.position.x = 1.07;
     fountain.position.z = 0.5;
-    fountain.scaling = new Vector3(0.025 , 0.025 , 0.025)
-    
+    fountain.scaling = new Vector3(0.025, 0.025, 0.025)
+
 
     //喷泉粒子
     const particleSystem = new ParticleSystem("particles", 5000, scene); //这和直接添加的粒子是差不多的 都叫particleSystem  5000粒子数
     particleSystem.particleTexture = new Texture("https://assets.babylonjs.com/textures/flare.png");//加一个纹理
 
     //粒子发射位置
-    particleSystem.emitter = new Vector3(1.1 , 0.1 , 0.5); 
+    particleSystem.emitter = new Vector3(1.1, 0.1, 0.5);
     //粒子喷嘴的大小
-    particleSystem.minEmitBox = new Vector3(-0.1 , 0 , 0);
-    particleSystem.maxEmitBox = new Vector3(0.1 , 0 , 0);
+    particleSystem.minEmitBox = new Vector3(-0.1, 0, 0);
+    particleSystem.maxEmitBox = new Vector3(0.1, 0, 0);
 
     //颜色
     particleSystem.color1 = new Color4(0.7, 0.8, 1.0, 1.0);
@@ -480,22 +575,22 @@ export default class SmallVillage extends Component {
     // particleSystem.start();
 
     let switched = false;
-    scene.onPointerObservable.add((pointerInfo)=>{
-            // eslint-disable-next-line default-case
-            switch (pointerInfo.type) {
-                case PointerEventTypes.POINTERDOWN: //点击事件，当按下鼠标的时候触发
-                if(pointerInfo.pickInfo.hit){ //当点击到喷泉的时候才触发，hit就是点中
-                    const pickedMesh = pointerInfo.pickInfo.pickedMesh
-                    if(pickedMesh === fountain){
-                        switched = !switched
-                    }
-                    if(switched){ //如果为真，也就是点击到了
-                        particleSystem.start(); //那么就启动粒子系统 
-                    } else {
-                        particleSystem.stop();
-                    }
-                }
+    scene.onPointerObservable.add((pointerInfo) => {
+      // eslint-disable-next-line default-case
+      switch (pointerInfo.type) {
+        case PointerEventTypes.POINTERDOWN: //点击事件，当按下鼠标的时候触发
+          if (pointerInfo.pickInfo.hit) { //当点击到喷泉的时候才触发，hit就是点中
+            const pickedMesh = pointerInfo.pickInfo.pickedMesh
+            if (pickedMesh === fountain) {
+              switched = !switched
             }
+            if (switched) { //如果为真，也就是点击到了
+              particleSystem.start(); //那么就启动粒子系统 
+            } else {
+              particleSystem.stop();
+            }
+          }
+      }
     })
 
   }

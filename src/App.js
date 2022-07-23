@@ -6,6 +6,7 @@ import movePOV from "./pages/MovePov";
 import CartoonCharacters from "./pages/CartoonCharacters";
 import DistantHills from "./pages/DistantHills/DistantHills";
 import Latheturned from "./pages/LatheTurned/LatheTurned";
+import StreetLights from "./pages/Light/StreetLights";
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
   // new CartoonCharacters(canvas)
   // new DistantHills(canvas)
   // new Latheturned(canvas)
+  // new StreetLights(canvas)
   
   return (
     <div className="App">
