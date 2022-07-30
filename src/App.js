@@ -16,9 +16,9 @@ function App() {
   // new ParentChildren(canvas)
   // new VillageAnimation(canvas)
   // new SmallVillage(canvas)//完整
-  new Charater(canvas)
+  // new Charater(canvas)
   // new movePOV(canvas)
-  // new CartoonCharacters(canvas)
+  new CartoonCharacters(canvas)
   // new DistantHills(canvas)
   // new Latheturned(canvas)
   // new StreetLights(canvas)
