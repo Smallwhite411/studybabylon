@@ -13,31 +13,32 @@ window.earcut = earcut
 export default class SmallVillage extends Component {
   constructor(props) {
     super(props);
-    this.engine = new Engine(this.props) //引擎，这个props 其实也就是从App.js 里面传过来的canvas
+    this.engine = new Engine(this.props) //引擎，这个props 其实也就是从App.js 里面传过来的canvas的dom
+    //引擎是最重要的，将获取到的dom节点放在Engine 里面的生成一个存在于当前dom节点上的引擎
     this.scene = this.CreateScene() //创建场景
 
     this.scene.debugLayer.show({
       embedMode: true
     })
 
-    this.engine.runRenderLoop(() => {
+    this.engine.runRenderLoop(() => { //不断的进行渲染
       this.scene.render()
     })
   }
 
   CreateScene = () => {
     const scene = new Scene(this.engine); //场景需要引擎
-    const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 150, new Vector3(0, 60, 0)); //这里可以调整摄像机的位置和距离物体的距离
+    const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 5, 10, new Vector3(0, 0, 0)); //这里可以调整摄像机的位置和距离物体的距离
                                       //默认相机应该是在x轴那边 ,
                                       //名称   在横轴的旋转(向右旋转 90度为正方形)  在纵轴的旋转  摄像机到目标的距离  定义相机的目标，这就是一个点
-    camera.upperBetaLimit = Math.PI / 2.2; //限制摄像机的旋转角度
+    // camera.upperBetaLimit = Math.PI / 2.2; //限制摄像机的旋转角度
 
 
-    camera.attachControl(this.props, true);//attachControl  这个是可以让我们控制鼠标。可以操作
+    camera.attachControl(this.props, true);//attachControl  这个是可以让我们控制鼠标、键盘的上下左右键对摄像机移动和旋转操作。可以操作
 
     // const light = new HemisphericLight("light", new Vector3(4, 1, 0), this.scene); //摄像机的位置
     const  light = new DirectionalLight("dir01", new Vector3(1, -1, 1), scene); //这个是旋转方向
-    light.position = new Vector3(0, 15, -30); //这个是高度
+    light.position = new Vector3(0, 5, -5); //这个是高度
     light.intensity = 1 //降低环境光灯高度，这样聚光灯照射的才看得出来，要不都是白色的
 
     const shadowGenerator = new ShadowGenerator(1024,light); //影子发生器，1024应该是在某一范围内才能有影子
@@ -45,7 +46,7 @@ export default class SmallVillage extends Component {
 
 
     //GUI
-    const adt = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    const adt = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI"); //获取UI，操作页面亮度的
 
     const panel = new GUI.StackPanel();
     panel.width = "220px";
@@ -334,7 +335,7 @@ export default class SmallVillage extends Component {
 
       shadowGenerator.addShadowCaster(dude)
 
-      camera.parent = dude //人物dude作为摄像机的父级
+      // camera.parent = dude //人物dude作为摄像机的父级
 
       scene.beginAnimation(result.skeletons[0], 0, 100, true, 1.0);
 
