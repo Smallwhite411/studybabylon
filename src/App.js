@@ -8,6 +8,7 @@ import DistantHills from "./pages/DistantHills/DistantHills";
 import Latheturned from "./pages/LatheTurned/LatheTurned";
 import StreetLights from "./pages/Light/StreetLights";
 import Charater from "./pages/Charater";
+import Bottle from "./pages/Bottle";
 
 
 function App() {
@@ -15,7 +16,8 @@ function App() {
   // new BasicScene(canvas)  //把获取到的canvas 当作容器传给
   // new ParentChildren(canvas)
   // new VillageAnimation(canvas)
-  new SmallVillage(canvas)//完整
+  // new SmallVillage(canvas)//完整
+  new Bottle(canvas)
   // new Charater(canvas)
   // new movePOV(canvas)
   // new CartoonCharacters(canvas)
